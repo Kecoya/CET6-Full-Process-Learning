@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎧 CET-6 听力专项训练</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎧 CET-6 听力专项训练</h1>
+            <div class="header-info">盲听 → 自评理解 → 盲选答案 → AI 评分 → 逐句精听</div>
+        </header>
+
+        <!-- ============ SETUP ============ -->
+        <div class="card">
+            <h2>⚙️ 基础设置</h2>
+            <div id="statusBanner" class="status-banner">
+                <span id="statusBackend">🔌 后端：检测中…</span>
+                <span id="statusKey">🔑 DeepSeek Key：检测中…</span>
+                <span id="statusHint" class="hint" style="margin:0"></span>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <div class="col-fixed" style="min-width:240px">
+                    <label class="field-label">🧠 模型（留空则使用 .env 默认值）</label>
+                    <select id="modelSelect">
+                        <option value="" selected>使用 .env 默认</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash（快·省）</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro（评分更细腻）</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:18px">
+                <label class="field-label">🗣️ 语音与语速（长对话用女/男声；短文·讲座用女声作旁白）</label>
+                <div class="voice-controls-container">
+                    <div class="voice-control-group female">
+                        <div class="voice-control-label female"><span>👩</span><span>女声</span></div>
+                        <select id="femaleVoiceSelect"></select>
+                        <button class="btn btn-sm test-voice-button" style="background:linear-gradient(135deg,#e91e63,#f06292)" onclick="testVoice('woman')">🔊 试听</button>
+                    </div>
+                    <div class="voice-control-group male">
+                        <div class="voice-control-label male"><span>👨</span><span>男声</span></div>
+                        <select id="maleVoiceSelect"></select>
+                        <button class="btn btn-sm test-voice-button" style="background:linear-gradient(135deg,#2196f3,#42a5f5)" onclick="testVoice('man')">🔊 试听</button>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:12px">
+                    <div class="col-fixed" style="min-width:200px">
+                        <label class="field-label">⏱️ 语速</label>
+                        <select id="speedSelect">
+                            <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                        </select>
+                    </div>
+                    <div class="col-fixed" style="min-width:220px">
+                        <label class="field-label">⏸️ 句间停顿</label>
+                        <select id="gapSelect">
+                            <option value="80">紧凑（80ms）</option>
+                            <option value="160" selected>标准（160ms）</option>
+                            <option value="300">自然（300ms）</option>
+                            <option value="600">宽松（600ms）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STEPPER ============ -->
+        <div class="card" style="padding:16px 22px">
+            <div class="stepper" id="stepper"></div>
+        </div>
+
+        <!-- ============ STAGE: SOURCE ============ -->
+        <div class="card" id="stage-source">
+            <div class="tabs">
+                <div class="tab active" id="tab-gen" onclick="switchTab('gen')">✨ AI 生成原文</div>
+                <div class="tab" id="tab-custom" onclick="switchTab('custom')">📝 自定义原文</div>
+            </div>
+
+            <!-- generate -->
+            <div id="panel-gen">
+                <label class="field-label">① 选择题型（点击选中）</label>
+                <div class="type-cards" id="typeCards"></div>
+
+                <div style="margin-top:16px">
+                    <label class="field-label">② 主题 / 关键词（可选，留空则随机）</label>
+                    <input type="text" id="topicInput" placeholder="例如：campus life / climate change / job interview" />
+                </div>
+                <div style="margin-top:18px">
+                    <button class="btn btn-primary" onclick="generateExercise()">✨ 生成听力原文 + 题目</button>
+                </div>
+            </div>
+
+            <!-- custom -->
+            <div id="panel-custom" class="hidden">
+                <div class="row">
+                    <div class="col-fixed" style="min-width:220px">
+                        <label class="field-label">题型</label>
+                        <select id="customTypeSelect"></select>
+                    </div>
+                </div>
+                <div style="margin-top:14px">
+                    <label class="field-label">粘贴你的英文原文（AI 据此生成题目与选项，原文保留不变）</label>
+                    <textarea id="customTextInput" rows="8" placeholder="Paste your English listening script here..."></textarea>
+                    <div class="hint">建议词数：长对话 250–320 / 短文 200–260 / 讲座 260–340。</div>
+                </div>
+                <div style="margin-top:14px">
+                    <button class="btn btn-primary" onclick="generateFromCustom()">✨ 由原文生成选项 + 答案</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STAGE: BLIND ============ -->
+        <div class="card hidden" id="stage-blind">
+            <div class="section-head">
+                <div class="left">
+                    <h2 style="margin:0">🙉 盲听 · 写下你的理解</h2>
+                    <span class="badge" id="blindTypeBadge"></span>
+                </div>
+                <button class="btn btn-red btn-sm" onclick="stopPlayback()">⏹️ 停止</button>
+            </div>
+            <div class="blind-banner">⚠️ 盲听模式：原文与背景已隐藏。请专注 listening，听完后写下你理解到的内容（中英文均可）。共两遍。</div>
+
+            <div class="round-block" id="round1Block">
+                <div class="round-title">① 第一遍盲听 <span id="r1Status"></span></div>
+                <button class="btn btn-green" id="r1PlayBtn" onclick="startBlindRound(1)">▶️ 开始第一遍盲听</button>
+                <div id="r1InputWrap" class="hidden" style="margin-top:12px">
+                    <label class="field-label">写下第一遍后你对原文的理解：</label>
+                    <textarea id="u1Input" rows="4" placeholder="听到了哪些人物、事件、观点、细节……"></textarea>
+                    <button class="btn btn-blue btn-sm" style="margin-top:8px" onclick="confirmUnderstanding(1)">确认，进入第二遍 →</button>
+                </div>
+            </div>
+
+            <div class="round-block" id="round2Block">
+                <div class="round-title">② 第二遍盲听 <span id="r2Status"></span></div>
+                <button class="btn btn-green" id="r2PlayBtn" onclick="startBlindRound(2)" disabled>▶️ 开始第二遍盲听</button>
+                <div id="r2InputWrap" class="hidden" style="margin-top:12px">
+                    <label class="field-label">写下第二遍后你补充/修正的理解：</label>
+                    <textarea id="u2Input" rows="4" placeholder="第二遍你又抓住了什么？修正了哪些？"></textarea>
+                    <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="confirmUnderstanding(2)">进入答题 →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STAGE: ANSWER ============ -->
+        <div class="card hidden" id="stage-answer">
+            <div class="section-head">
+                <div class="left">
+                    <h2 style="margin:0">🔘 选择正确选项</h2>
+                    <span class="badge warn">题干已隐藏 · 仅凭听力作答</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <label style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" id="showStemsChk" onchange="toggleStems(this.checked)"> 显示题干
+                    </label>
+                    <button class="btn btn-red btn-sm" onclick="stopPlayback()">⏹️ 停止</button>
+                </div>
+            </div>
+            <div id="answerContent"></div>
+            <div style="margin-top:18px;text-align:center">
+                <div class="hint" style="margin-bottom:10px">已完成 <span id="answeredCount">0</span> / <span id="totalQ">0</span> 题</div>
+                <button class="btn btn-orange" id="scoreBtn" onclick="submitScore()" disabled>📊 提交并评分</button>
+            </div>
+        </div>
+
+        <!-- ============ STAGE: SCORE ============ -->
+        <div class="card hidden" id="stage-score">
+            <h2>📊 理解度评分</h2>
+            <div id="scoreContent"></div>
+            <div style="margin-top:20px;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-green" onclick="saveExercise()">💾 保存到 my/</button>
+                <button class="btn btn-blue" onclick="setStage('intensive')">📖 进入精听</button>
+                <button class="btn btn-ghost" onclick="restart()">🔄 再来一组</button>
+            </div>
+        </div>
+
+        <!-- ============ STAGE: INTENSIVE ============ -->
+        <div class="card hidden" id="stage-intensive">
+            <div class="section-head">
+                <div class="left">
+                    <h2 style="margin:0">📖 精听 · 逐句播放</h2>
+                    <span class="badge" id="intensiveTypeBadge"></span>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-green btn-sm" onclick="playAllIntensive()">▶️ 整段播放</button>
+                    <button class="btn btn-red btn-sm" onclick="stopPlayback()">⏹️ 停止</button>
+                </div>
+            </div>
+            <div class="context-box" id="contextBox">
+                <h3>📌 背景信息</h3>
+                <p id="contextText" style="font-size:14px;line-height:1.6"></p>
+            </div>
+            <div class="sentence-list" id="sentenceList"></div>
+            <div id="intensiveQuestions" style="margin-top:8px"></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="ltext" id="loadingText">AI 思考中…</div>
+    </div>
+
+    <script src="/static/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+讲话/报道/讲座 Recording（真题 Section C，CET-6 单题分值最高的题型，每套三篇）：
+
+【原文规格——真题实测，本题型是改进重点】
+- 词数：345–430 词（真题中位 398，P25–P75 约 390–407，区间约 345–431）。务必写到这个量级——这是讲座与短文最显著的区别，原 AI 输出常严重偏短。
+- 说话人：单人(N)学术或正式讲话，speaker 固定为 "N"，dialogue 为单段。
+- 风格：正式讲座/专题报道口吻，学术词汇多、长难句密集、信息密度大；可含数据、案例、对比、引用研究。
+
+【题材轮换（与真题一致）】
+- 职场/管理/就业：员工不满、管理者挫败、为何员工不守流程、创业风险、面试礼仪、披露残疾求职。
+- 科技/产业：澳大利亚矿业数字化、智能手机/背景噪音对学习的影响、交通与道路安全。
+- 健康/心理/生理：女性更长寿、人体细胞、性格与抗干扰、残疾人求职心理。
+- 社会/经济/文化：加勒比经济、儿童即时满足与挫折教育、广告与消费。
+- 教育/家庭：孩子的自信与挫折、父母教养方式、背景音乐与阅读。
+- 结构：开场点题(Good afternoon. In today's lecture...) → 展开论证/叙述(数据/案例/对比/引用研究) → 收束结论或呼吁。
+
+【出题——多数 3 题（偶尔 4 题），严格顺序，覆盖主旨 + 细节 + 推断】
+开头(讲座主题/现象/定义) → Q1；中段(研究结论、转折后、对比数据) → Q2；结尾(建议/呼吁/推断) → Q3(及 Q4)。
+
+【考点】
+- 讲座首段：主题、研究对象、核心概念、现象。
+- 逻辑信号词后：转折(but/yet/however)、因果(so/because/thus)、递进(besides)、举例(for instance)。
+- 实验/调查结论（讲座最爱考）：research shows / a study found / researchers compared / science has demonstrated / statistics indicate。
+- 对比与分类（A 组 vs B 组、程度差异）。
+- 首尾必考；尾段常出"建议 / 呼吁 / 推断"。
+
+【强干扰项三大陷阱（迷惑性全场最强）】
+① 细节碎片：原文出现原词但只是举例/次要细节，非核心结论。
+② 程度/范围偷换：some→all，may→must，slight→complete，occasionally→always。
+③ 因果颠倒 / 主体混淆：A 导致 B 写成 B 造成 A；把研究对象与对照组成果互换。
+
+【真题题干模板——必须套用这类句式，不要自造】
+- What does the speaker say about ...?  （讲座最高频句式，反复用）
+- What do we learn about ...?  /  What can we learn from ...?
+- What is ...?  /  What is the impact of ...?  /  What is a primary cause of ...?
+- What is the attitude of ... towards ...?  /  What is said about ...?
+- Why are / do ...?  /  Why do ... sometimes ...?  /  Why should ... be encouraged to ...?
+- What should ... do?  /  What should the interviewee avoid doing?  /  What are people advised to do?
+- What kind of ... do companies like to recruit?  /  What is especially important for ...?
+- When are ... more likely to ..., according to the researchers?  /  According to ..., what should ...?
+
+【真题选项形态参考】
+- "It + 动词" 句式：It is expanding at an accelerating speed. / It depends heavily on tourism. / It can be rather risky. / It is a violation of faith and trust.
+- "They + 动词" 句式：They kill more people than any infectious disease. / They will end up lonely, dependent and dissatisfied. / They believe a little dirt harms no one.
+- 名词短语：Insufficient motivation. / Tough regulations. / Bad managers. / Failing to make sufficient preparations.
+四选项必须语法平行、长度相近。

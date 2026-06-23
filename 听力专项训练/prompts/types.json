@@ -1,0 +1,5 @@
+{
+  "conversation": {"label": "长对话", "emoji": "💬", "qcount": 4, "words": "约 300–345 词 · 4 题 · W/M 交替"},
+  "passage":      {"label": "听力篇章", "emoji": "📢", "qcount": 3, "words": "约 240–265 词 · 3(或4)题 · 单人独白"},
+  "lecture":      {"label": "讲话·报道·讲座", "emoji": "🎓", "qcount": 3, "words": "约 345–430 词 · 3(或4)题 · 学术讲座"}
+}

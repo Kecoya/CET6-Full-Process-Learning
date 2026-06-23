@@ -1,0 +1,45 @@
+听力篇章 Passage（真题 Section B，每套两篇，每篇 3 或 4 题——多数为 3 题）：
+
+【原文规格——真题实测】
+- 词数：240–265 词（真题中位 254，区间约 242–262）。短小精悍，信息密度高。
+- 说话人：单人(N)朗读独白，无对话；speaker 固定为 "N"，dialogue 为单段。
+- 风格：书面/半书面说明体，长难句增多、逻辑连接词密集(but/yet/however/so/because/for instance/thus/therefore)；含学术基础词汇与一定低频词，但比讲座更通俗、可朗读。
+
+【题材轮换（与真题一致）】
+- 科普常识 / 自然生物：蝙蝠 echolocation、石油勘探史、可可可乐瓶设计、电视广告对儿童。
+- 心理学 / 社会现象：陌生人交谈、好人为何受罚、做决定、压力与情绪。
+- 人物 / 历史 / 科技史：Goddard 火箭、石油大亨 Higgins、某发明家或探险家生平节点。
+- 教育 / 育儿 / 健康：作业与网络、学前儿童看电视、饮食习惯。
+- 结构：开头总起(研究对象/现象/人物) → 中段分点(实验/调查结论、举例、生平阶段) → 结尾总结(观点/建议/长远影响)。
+
+【出题——3 题（偶尔 4 题），均匀分布，不集中在某段】
+开头(主题/研究对象/首句) → Q1；中段(实验/调查结论、转折后、举例) → Q2；结尾(观点/建议/影响) → Q3。
+
+【考点】
+- 篇章首句：主题、研究对象、人物身份。
+- 逻辑信号词后：转折(but/yet/however)、因果(so/because/thus)、递进(besides/moreover)、举例(for instance/such as)。
+- 实验/调查结论：research shows / a study found that / researchers suggest / scientists believe。
+- 特殊定义、专有概念、关键数字结论。
+- 尾段：作者观点 / 建议 / 长远影响 / 启示。
+
+【强干扰项三大陷阱】
+① 细节碎片：原文出现原词但只是举例/次要细节，非核心结论。
+② 程度/范围偷换：some→all，may→must，often→always，partly→entirely。
+③ 因果颠倒：A 导致 B，写成 B 造成 A。
+
+【真题题干模板——必须套用这类句式，不要自造】
+- What does the passage say about ...?
+- What do we learn about ...?  /  What do we know about ...?
+- What did the study / research find about ...?  /  What do researchers find about ...?
+- What conclusion could be drawn from the study in ...?
+- Why did ... (move to / decide to / fail to) ...?  /  Why does ... ?  /  Why can't ... ?
+- What does ... (Schulman / the passage) suggest scientists / parents do?
+- What are parents / people advised to do to ...?  /  What does the passage suggest ... do?
+- What prevented ... from ...?  /  What has made ... ?
+
+【真题选项形态参考】
+- "It + 动词" 句式：It ensures the accuracy of their arguments. / It is not of much help to younger children. / It diminishes laymen's interest in science.
+- "They + 动词" 句式：They use their sense of hearing to capture their prey. / They become more emotionally aggressive.
+- "The more..., the more..." 平行句：The more television they watch, the greater their parents' stress.（四选项同构）
+- 单个名词/形容词：Santa Claus. / A polar bear. / Weird.
+四选项必须语法平行、长度相近。
