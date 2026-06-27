@@ -260,6 +260,8 @@
         STAGES.forEach(x => document.getElementById('stage-' + x).classList.toggle('hidden', x !== s));
         renderStepper();
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (s === 'answer') maybeStartTimer();
+        else stopTimer();
     }
     function reach(s) { state.reached[s] = true; }
 
@@ -498,6 +500,46 @@
     function toggleStems(show) {
         document.querySelectorAll('.q-stem').forEach(s => s.classList.toggle('visible', show));
     }
+
+    /* ============== TIMER（可选答题倒计时） ============== */
+    const timer = { handle: null, deadline: 0, remain: 0, paused: false, mins: 0 };
+    function maybeStartTimer() {
+        const bar = document.getElementById('answerTimerBar');
+        if (state.scored) { if (bar) bar.classList.add('hidden'); stopTimer(); return; }
+        const mins = Math.max(0, parseInt(document.getElementById('timerMinutes').value, 10) || 0);
+        timer.mins = mins;
+        if (mins <= 0) { if (bar) bar.classList.add('hidden'); stopTimer(); return; }
+        if (bar) bar.classList.remove('hidden');
+        startTimer(mins);
+    }
+    function startTimer(mins) {
+        timer.deadline = Date.now() + mins * 60000; timer.paused = false;
+        const pb = document.getElementById('pauseBtn'); if (pb) pb.textContent = '⏸️ 暂停';
+        if (timer.handle) clearInterval(timer.handle);
+        timer.handle = setInterval(tickTimer, 1000); tickTimer();
+    }
+    function tickTimer() {
+        if (timer.paused) return;
+        const remain = Math.max(0, Math.round((timer.deadline - Date.now()) / 1000));
+        const el = document.getElementById('timerDisplay'); if (!el) return;
+        el.textContent = formatTime(remain);
+        el.classList.toggle('warn', remain <= 300 && remain > 60);
+        el.classList.toggle('danger', remain <= 60 && remain > 0);
+        if (remain <= 0) {
+            stopTimer();
+            toast('⏰ 时间到！', 'err');
+            if (document.getElementById('strictChk').checked && state.stage === 'answer') submitScore();
+        }
+    }
+    function togglePauseTimer() {
+        if (!timer.handle) return;
+        timer.paused = !timer.paused;
+        const pb = document.getElementById('pauseBtn');
+        if (timer.paused) { timer.remain = Math.max(0, Math.round((timer.deadline - Date.now()) / 1000)); if (pb) pb.textContent = '▶️ 继续'; }
+        else { timer.deadline = Date.now() + timer.remain * 1000; if (pb) pb.textContent = '⏸️ 暂停'; }
+    }
+    function stopTimer() { if (timer.handle) { clearInterval(timer.handle); timer.handle = null; } }
+    function formatTime(sec) { const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + String(s).padStart(2, '0'); }
 
     /* ============== SCORE ============== */
     // 提示词与 DeepSeek 调用均在后端完成；此处仅提交数据并渲染结果。

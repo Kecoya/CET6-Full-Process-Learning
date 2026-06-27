@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔤 CET-6 选词填空</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔤 CET-6 选词填空</h1>
+            <div class="header-info">出题 → 限时填空 → 本地评分解析（Section A · 10 空 · 15 词库）</div>
+        </header>
+
+        <div class="card">
+            <h2>⚙️ 基础设置</h2>
+            <div id="statusBanner" class="status-banner">
+                <span id="statusBackend">🔌 后端：检测中…</span>
+                <span id="statusKey">🔑 DeepSeek Key：检测中…</span>
+                <span id="statusHint" class="hint" style="margin:0"></span>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <div class="col-fixed" style="min-width:240px">
+                    <label class="field-label">🧠 模型（留空则使用 .env 默认值）</label>
+                    <select id="modelSelect">
+                        <option value="" selected>使用 .env 默认</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash（快·省）</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro（质量更佳）</option>
+                    </select>
+                </div>
+                <div class="col-fixed" style="min-width:160px">
+                    <label class="field-label">⏱️ 倒计时（分钟）</label>
+                    <input type="number" id="timerMinutes" value="8" min="1" max="120" step="1">
+                </div>
+                <div class="col-fixed" style="min-width:200px;padding-bottom:4px">
+                    <label class="field-label">严格模式</label>
+                    <label style="font-size:13px;color:#555;display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" id="strictChk"> 到点自动收卷
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:16px 22px"><div class="stepper" id="stepper"></div></div>
+
+        <div class="card" id="stage-source">
+            <h2>✨ 出题</h2>
+            <label class="field-label">主题 / 关键词（可选，留空则随机）</label>
+            <input type="text" id="topicInput" placeholder="例如：climate change / education / technology" />
+            <div class="hint">AI 将生成 250–300 词原文、10 个空、15 词词库（含同根词族干扰）。</div>
+            <div style="margin-top:16px">
+                <button class="btn btn-primary" onclick="generateExercise()">✨ 生成选词填空题</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="stage-answer">
+            <div class="section-head">
+                <div class="left"><h2 style="margin:0">✍️ 选词填空</h2><span class="badge" id="ansBadge"></span></div>
+            </div>
+            <div class="timer-bar">
+                <span class="timer-label">⏱️ 剩余时间</span>
+                <span class="timer-display" id="timerDisplay">8:00</span>
+                <button class="btn btn-ghost btn-sm" id="pauseBtn" onclick="togglePauseTimer()">⏸️ 暂停</button>
+                <button class="btn btn-ghost btn-sm" onclick="resetTimer()">🔄 重置</button>
+            </div>
+            <div class="hint" style="margin-bottom:8px">💡 先点词库中一个词，再点文中空格填入；点已填空格可清空。每词最多用一次。</div>
+            <div id="passageBox"></div>
+            <div class="word-bank" id="wordBank"></div>
+            <div style="margin-top:18px;text-align:center">
+                <div class="hint" style="margin-bottom:10px">已填 <span id="answeredCount">0</span> / <span id="totalQ">10</span> 空</div>
+                <button class="btn btn-orange" id="scoreBtn" onclick="submitScore()" disabled>📊 提交并评分</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="stage-score">
+            <h2>📊 评分与解析</h2>
+            <div id="scoreContent"></div>
+            <div id="reviewContent"></div>
+            <div style="margin-top:20px;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-green" onclick="saveExercise()">💾 保存到 my/</button>
+                <button class="btn btn-ghost" onclick="restart()">🔄 再来一篇</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="ltext" id="loadingText">AI 思考中…</div>
+    </div>
+    <script src="/static/app.js" defer></script>
+</body>
+</html>

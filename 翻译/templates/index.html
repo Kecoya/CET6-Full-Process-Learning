@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 CET-6 翻译</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌐 CET-6 翻译（段落汉译英）</h1>
+            <div class="header-info">出题 → 限时翻译 → AI 评分 → 对照参考译文与术语解析</div>
+        </header>
+
+        <div class="card">
+            <h2>⚙️ 基础设置</h2>
+            <div id="statusBanner" class="status-banner">
+                <span id="statusBackend">🔌 后端：检测中…</span>
+                <span id="statusKey">🔑 DeepSeek Key：检测中…</span>
+                <span id="statusHint" class="hint" style="margin:0"></span>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <div class="col-fixed" style="min-width:240px">
+                    <label class="field-label">🧠 模型（留空则使用 .env 默认值）</label>
+                    <select id="modelSelect">
+                        <option value="" selected>使用 .env 默认</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash（快·省）</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro（评分更细腻）</option>
+                    </select>
+                </div>
+                <div class="col-fixed" style="min-width:160px">
+                    <label class="field-label">⏱️ 倒计时（分钟）</label>
+                    <input type="number" id="timerMinutes" value="30" min="1" max="120" step="1">
+                </div>
+                <div class="col-fixed" style="min-width:200px;padding-bottom:4px">
+                    <label class="field-label">严格模式</label>
+                    <label style="font-size:13px;color:#555;display:flex;align-items:center;gap:8px;cursor:pointer">
+                        <input type="checkbox" id="strictChk"> 到点自动收卷
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:16px 22px"><div class="stepper" id="stepper"></div></div>
+
+        <div class="card" id="stage-source">
+            <h2>✨ 出题</h2>
+            <label class="field-label">题材 / 关键词（可选，留空则随机）</label>
+            <input type="text" id="topicInput" placeholder="例如：牡丹 / 港珠澳大桥 / 成语 / 移动支付" />
+            <div class="hint">AI 将生成 180–200 字中文段落（专有名词括注英文）+ 参考译文 + 术语解析。</div>
+            <div style="margin-top:16px">
+                <button class="btn btn-primary" onclick="generateExercise()">✨ 生成翻译题</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="stage-answer">
+            <div class="section-head">
+                <div class="left"><h2 style="margin:0">✍️ 汉译英</h2><span class="badge" id="ansBadge"></span></div>
+                <button class="btn btn-ghost btn-sm" id="hintBtn" onclick="toggleHints()">💡 显示术语提示</button>
+            </div>
+            <div class="timer-bar">
+                <span class="timer-label">⏱️ 剩余时间</span>
+                <span class="timer-display" id="timerDisplay">30:00</span>
+                <button class="btn btn-ghost btn-sm" id="pauseBtn" onclick="togglePauseTimer()">⏸️ 暂停</button>
+                <button class="btn btn-ghost btn-sm" onclick="resetTimer()">🔄 重置</button>
+            </div>
+            <div id="sourceBox"></div>
+            <div id="hintsBox" class="key-terms-box hidden"></div>
+            <div class="write-toolbar">
+                <label class="field-label" style="margin:0">你的英文翻译</label>
+                <span class="word-counter" id="wordCounter">0 词</span>
+            </div>
+            <textarea class="write-area" id="answerInput" placeholder="Translate the Chinese passage into English..." oninput="updateWordCount()"></textarea>
+            <div style="margin-top:18px;text-align:center">
+                <button class="btn btn-orange" id="scoreBtn" onclick="submitScore()">📊 提交并 AI 评分</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="stage-score">
+            <h2>📊 AI 评分</h2>
+            <div id="scoreContent"></div>
+            <div id="referenceContent"></div>
+            <div style="margin-top:20px;text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+                <button class="btn btn-green" onclick="saveExercise()">💾 保存到 my/</button>
+                <button class="btn btn-ghost" onclick="restart()">🔄 再来一段</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="ltext" id="loadingText">AI 思考中…</div>
+    </div>
+    <script src="/static/app.js" defer></script>
+</body>
+</html>

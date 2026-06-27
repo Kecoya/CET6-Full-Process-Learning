@@ -37,6 +37,16 @@
                         生成后按「大纲词汇」替换超纲词
                     </label>
                 </div>
+                <div class="col-fixed" style="min-width:210px">
+                    <label class="field-label">⏱️ 答题倒计时（分钟）</label>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <input type="number" id="timerMinutes" value="0" min="0" max="60" step="1" style="width:90px" title="0 = 不计时">
+                        <label style="font-size:13px;color:#555;display:flex;align-items:center;gap:6px;cursor:pointer">
+                            <input type="checkbox" id="strictChk"> 严格
+                        </label>
+                    </div>
+                    <div class="hint">0=关闭；严格模式到点自动评分</div>
+                </div>
             </div>
 
             <div style="margin-top:18px">
@@ -173,6 +183,11 @@
                     </label>
                     <button class="btn btn-red btn-sm" onclick="stopPlayback()">⏹️ 停止</button>
                 </div>
+            </div>
+            <div class="timer-bar hidden" id="answerTimerBar">
+                <span class="timer-label">⏱️ 剩余时间</span>
+                <span class="timer-display" id="timerDisplay">00:00</span>
+                <button class="btn btn-ghost btn-sm" id="pauseBtn" onclick="togglePauseTimer()">⏸️ 暂停</button>
             </div>
             <div id="answerContent"></div>
             <div style="margin-top:18px;text-align:center">
