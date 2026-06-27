@@ -6,9 +6,9 @@
 
     // 仅用于界面渲染（题型卡、徽章）；命题细节由后端 app.py 的 TYPE_META + SYS_GEN 统一管理
     const TYPE_META = {
-        conversation: { label: '长对话', emoji: '💬', qcount: 4, words: '约 300–345 词 · 4 题 · W/M 交替' },
-        passage:      { label: '听力篇章', emoji: '📢', qcount: 3, words: '约 240–265 词 · 3(或4)题 · 单人独白' },
-        lecture:      { label: '讲话·报道·讲座', emoji: '🎓', qcount: 3, words: '约 345–430 词 · 3(或4)题 · 学术讲座' }
+        conversation: { label: '长对话', emoji: '💬', qcount: 4, words: '约 280–320 词 · 4 题 · W/M 交替' },
+        passage:      { label: '听力篇章', emoji: '📢', qcount: 3, words: '约 240–260 词 · 3(或4)题 · 单人独白' },
+        lecture:      { label: '讲话·报道·讲座', emoji: '🎓', qcount: 3, words: '约 370–430 词 · 3(或4)题 · 学术讲座' }
     };
 
     // ---- global state ----
@@ -293,7 +293,8 @@
     async function generateExercise() {
         const typeKey = state.selectedType;
         const topic = document.getElementById('topicInput').value;
-        await runGeneration({ type: typeKey, topic, customText: null, loadingMsg: '正在生成 CET-6 听力原文与题目…' });
+        const vocabCheck = document.getElementById('vocabChk').checked;
+        await runGeneration({ type: typeKey, topic, customText: null, vocabCheck, loadingMsg: '正在生成 CET-6 听力原文与题目…' });
     }
     async function generateFromCustom() {
         const typeKey = document.getElementById('customTypeSelect').value;
@@ -303,14 +304,20 @@
         await runGeneration({ type: typeKey, topic: '', customText: raw, loadingMsg: '正在根据你的原文生成选项与答案…' });
     }
 
-    async function runGeneration({ type, topic, customText, loadingMsg }) {
+    async function runGeneration({ type, topic, customText, vocabCheck, loadingMsg }) {
         showLoading(loadingMsg);
         try {
-            const d = await apiPost('/api/generate', { type, topic, customText, model: currentModel() });
+            const payload = { type, topic, customText, model: currentModel() };
+            if (vocabCheck !== undefined) payload.vocabCheck = vocabCheck;
+            const d = await apiPost('/api/generate', payload);
             validateExercise(d.exercise); // 前端兜底校验（后端已校验过）
             loadExercise(d.exercise);
             const savedName = d.saved ? d.saved.split(/[\\/]/).pop() : '';
-            toast(savedName ? ('已生成并存档：my/' + savedName) : '生成完成，开始盲听', 'ok');
+            const adj = (d.exercise && Array.isArray(d.exercise.vocab_adjustments)) ? d.exercise.vocab_adjustments : [];
+            const replaced = adj.filter(a => a && a.to);  // 真正做了替换的
+            let msg = savedName ? ('已生成并存档：my/' + savedName) : '生成完成，开始盲听';
+            if (replaced.length) msg += `；已替换 ${replaced.length} 个超纲词`;
+            toast(msg, 'ok');
             reach('blind'); setStage('blind');
         } catch (e) {
             toast(e.message || '生成失败', 'err');
@@ -367,6 +374,13 @@
         document.getElementById('u2Input').value = '';
         document.getElementById('showStemsChk').checked = false;
 
+        // blind options panel: 默认折叠，重新渲染（仅选项、不显示题干）
+        renderBlindOptions();
+        const bo = document.getElementById('blindOptions');
+        const bot = document.getElementById('blindOptionsToggle');
+        if (bo) bo.classList.add('hidden');
+        if (bot) bot.textContent = '👁️ 查看选项（题干仍隐藏）';
+
         // badges
         const m = currentTypes()[d.type] || { label: d.type_label, emoji: '🎧' };
         document.getElementById('blindTypeBadge').textContent = `${m.emoji || '🎧'} ${d.type_label}`;
@@ -379,6 +393,23 @@
     }
 
     /* ============== BLIND LISTENING ============== */
+    // 盲听阶段可选展开"选项"面板：只显示四个选项，绝不显示题干；默认折叠，由用户决定。
+    function renderBlindOptions() {
+        const wrap = document.getElementById('blindOptions');
+        if (!wrap || !state.exercise) { if (wrap) wrap.innerHTML = ''; return; }
+        wrap.innerHTML = state.exercise.questions.map((q, i) => `
+            <div class="blind-q">
+                <div class="blind-q-num">第 ${i + 1} 题</div>
+                ${['A', 'B', 'C', 'D'].map(L => `<div class="blind-opt"><b>${L}.</b> ${escapeHtml(q.options[L])}</div>`).join('')}
+            </div>`).join('');
+    }
+    function toggleBlindOptions() {
+        const w = document.getElementById('blindOptions');
+        const btn = document.getElementById('blindOptionsToggle');
+        if (!w) return;
+        const hidden = w.classList.toggle('hidden');
+        if (btn) btn.textContent = hidden ? '👁️ 查看选项（题干仍隐藏）' : '🙈 收起选项';
+    }
     function startBlindRound(n) {
         const list = state.exercise.dialogue.map(seg => ({ text: seg.content, speaker: seg.speaker || 'N' }));
         const btn = document.getElementById('r' + n + 'PlayBtn');
@@ -428,7 +459,7 @@
 
             const head = document.createElement('div');
             head.className = 'q-head';
-            head.innerHTML = `<span class="q-num">Q${idx}</span><span class="badge warn">题干已隐藏（精听/评分后可显示）</span>`;
+            head.innerHTML = `<span class="q-num">Q${idx}</span><span class="badge warn">题干已隐藏（精听/评分后可显示）</span><button type="button" class="icon-btn" style="margin-left:auto" title="朗读本题题干与选项" onclick="playQuestion(${i})">🔊 播放题目</button>`;
             block.appendChild(head);
 
             const stem = document.createElement('div');

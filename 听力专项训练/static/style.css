@@ -130,6 +130,14 @@
         .round-block.done { border-style: solid; border-color: #c8e6c9; background: #f6fff6; }
         .round-title { font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
+        /* blind-stage optional options panel (options only, no stems; collapsed by default) */
+        .blind-options-wrap { margin: 0 0 18px; }
+        .blind-options { margin-top: 12px; display: grid; gap: 12px; }
+        .blind-q { background: #f7f9fc; border: 1px solid #e3e8f0; border-radius: 10px; padding: 12px 14px; }
+        .blind-q-num { font-weight: 700; color: #2c3e50; font-size: 13px; margin-bottom: 8px; }
+        .blind-opt { font-size: 14px; color: #444; line-height: 1.7; }
+        .blind-opt b { color: #1565c0; margin-right: 4px; }
+
         /* answer options (stems hidden) */
         .question-block { margin-bottom: 24px; }
         .q-head { font-weight: 700; margin-bottom: 10px; color: #2c3e50; display: flex; align-items: center; gap: 8px; }

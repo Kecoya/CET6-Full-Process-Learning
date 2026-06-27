@@ -23,6 +23,8 @@ from pathlib import Path
 import requests
 from flask import Flask, jsonify, render_template, request
 
+import vocab  # 四六级大纲词表加载 + 超纲词检测（本目录 vocab.py）
+
 BASE_DIR = Path(__file__).resolve().parent
 MY_DIR = BASE_DIR.parent / "my"          # CET-6学习/my
 ENV_FILE = BASE_DIR / ".env"
@@ -65,9 +67,9 @@ TYPE_META = {
         "label": "长对话",
         "emoji": "💬",
         "qcount": 4,
-        "words": "300–345",
+        "words": "280–320",
         "spec": """长对话 Long Conversation（口语场景对话，真题 Section A，每篇 4 题）：
-- ⚠️ 必须是真实的一男一女多轮对话：speaker 严格在 W(女) 与 M(男) 之间交替（W、M、W、M…这样轮流），男女双方各发言 4-6 次，共约 9-11 轮。绝不能只有单一性别、绝不能用 N。原文 300–345 词（真题中位 327），口语化但得体（含语气、建议、委婉、举例；句子长短交错）。
+- ⚠️ 必须是真实的一男一女多轮对话：speaker 严格在 W(女) 与 M(男) 之间交替（W、M、W、M…这样轮流），男女双方各发言 4-6 次，共约 9-11 轮。绝不能只有单一性别、绝不能用 N。原文 280–320 词/篇（考纲；真题中位约 327），语速 140–160 词/分钟，口语化但得体。
 - 固定场景轮换：职场财经(求职/跳槽/离职/创业/公司文化/预算理财) 或 生活服务(租房/购物/健身/旅行/就医) 或 媒体访谈(电台主持人 W 访谈嘉宾 M)。
 - 行文逻辑：寒暄或开场点题 → 抛出问题/主题 → 讨论多个方案(转折后才是关键) → 结尾达成共识/给建议/约定下一步。
 - 出 4 道题，严格顺序出题：第1轮(开头来意)→Q1，中段→Q2/Q3，结尾结论或下一步→Q4。
@@ -79,9 +81,9 @@ TYPE_META = {
         "label": "听力篇章",
         "emoji": "📢",
         "qcount": 3,
-        "words": "240–265",
+        "words": "240–260",
         "spec": """听力篇章 Passage（独白，无对话，真题 Section B，每篇 3 或 4 题，多为 3 题）：
-- 单人朗读独白，原文 240–265 词（真题中位 254）；长难句增多、逻辑连接词密集、学术基础词汇。
+- 单人朗读独白，原文 240–260 词/篇（考纲；真题中位约 254），语速 140–160 词/分钟；长难句增多、逻辑连接词密集、学术基础词汇。
 - 题材：科普常识/自然生物 / 心理学社会现象 / 人物历史科技史 / 教育育儿健康。
 - 总分结构：开头总起介绍主体 → 中间分点举例或讲实验或生平阶段 → 结尾总结观点或启示。
 - 出 3 道题（偶尔 4），均匀分布（开头1/中段1/结尾1），不集中在某段。
@@ -93,9 +95,9 @@ TYPE_META = {
         "label": "讲话·报道·讲座",
         "emoji": "🎓",
         "qcount": 3,
-        "words": "345–430",
+        "words": "370–430",
         "spec": """讲话/报道/讲座 Recording（CET-6 最高权重题型，单题分值最高，真题 Section C，每篇多 3 题）：
-- 单人学术或正式讲话，原文 345–430 词（真题中位 398，比短文明显更长——务必写到该量级）；学术词汇多、长难句密集、信息密度大。
+- 单人学术或正式讲话，原文约 370–430 词/篇，目标约 400 词（考纲"3 篇共约 1200 词"；真题中位约 398），语速 140–160 词/分钟；学术词汇多、长难句密集、信息密度大。
 - 题材：职场管理就业 / 科技产业 / 健康心理生理 / 社会经济文化 / 教育家庭。
 - 结构：开场点题(Good afternoon. In today's lecture...) → 展开论证或叙述（数据/案例/对比/引用研究）→ 收束结论或呼吁。
 - 出 3 道题（偶尔 4），严格顺序，覆盖主旨 + 细节 + 推断。
@@ -400,6 +402,68 @@ def write_to_my(exercise, label="听力专项", with_time=False):
     return path
 
 
+def refine_vocab(exercise, model=None):
+    """按四六级大纲词表扫描原文，把疑似超纲词交 DeepSeek 裁定并替换。
+
+    流程：词表扫描 → 候选词 → DeepSeek 逐个判断（保留合法六级词、仅替换真超纲词）
+    → 返回 (new_dialogue_or_None, replaced_list)。
+    任何环节出错都回退到不修订（不阻断生成）。词表缺失时直接返回 (None, [])。
+    """
+    vocab_set, _ = vocab.load_vocab()
+    if not vocab_set:
+        return None, []
+    candidates = vocab.scan_out_of_scope(vocab.transcript_text(exercise), vocab_set)
+    if not candidates:
+        return None, []
+
+    sys_msg = (
+        "你是 CET-6 听力原文的词汇合规审定员。下面给出一篇听力原文，以及一个由程序用"
+        "《四六级大纲词表》自动扫描得出的『疑似超纲词』候选列表。\n"
+        "重要：大纲词表并不完整，许多合法的六级词（如 workplace / teamwork / digitization / childhood）"
+        "未必被词表收录。因此你必须逐个判断：\n"
+        " - 若该词其实是常见或六级水平词汇（哪怕词表漏收），请保留，不要替换。\n"
+        " - 仅当某词确实生僻、超出六级范围时，才替换为意思最接近的『六级内』同义词；"
+        "若单字替换不自然则改写整句。\n"
+        "严格要求：\n"
+        " 1. 只修订『确实超纲』的词所在句，其余原句一字不改；不得增删整句。\n"
+        " 2. 必须保持原文原意与全部信息点（人物/事件/数字/因果/观点/态度），使基于原文的题目与答案依然成立。\n"
+        " 3. 修订后句子须自然、连贯、可朗读，难度维持六级听力水平。\n"
+        " 4. 长对话须保持 W/M 交替结构，speaker 标签不变。\n"
+        " 5. 严格只输出一个 JSON 对象：\n"
+        ' {"dialogue":[{"speaker":"W|M|N","content":"..."}],'
+        '"replaced":[{"from":"原超纲词","to":"替换为的大纲词或改写说明","reason":"为何替换"}]}\n'
+        "若没有任何词需要替换，dialogue 原样返回、replaced 返回空数组 []。"
+    )
+    cand_str = ", ".join(sorted({c["word"] for c in candidates}))
+    user_msg = (
+        "疑似超纲词候选（小写，已去重）：%s\n\n"
+        "原始 dialogue：\n%s\n\n请逐个裁定并输出修订结果。"
+        % (cand_str, json.dumps(exercise["dialogue"], ensure_ascii=False))
+    )
+    try:
+        raw = call_deepseek(
+            [{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}],
+            model,
+        )
+        data = parse_json_loose(raw)
+    except Exception as e:  # noqa: broad-except - 词汇修订失败不应阻断生成
+        app.logger.warning("vocab refine deepseek call failed: %s", e)
+        return None, [{"from": c["word"], "to": "", "reason": "扫描到疑似超纲词，但自动修订未完成"} for c in candidates]
+
+    if not isinstance(data, dict):
+        return None, []
+    new_dialogue = data.get("dialogue")
+    replaced = data.get("replaced") or []
+    if not isinstance(new_dialogue, list) or not new_dialogue:
+        return None, replaced
+    # 结构校验：每段须有非空 content
+    ok_struct = all(isinstance(t, dict) and isinstance(t.get("content"), str) and t["content"].strip()
+                    for t in new_dialogue)
+    if not ok_struct:
+        return None, replaced
+    return new_dialogue, replaced
+
+
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
     data = request.get_json(silent=True) or {}
@@ -451,6 +515,29 @@ def api_generate():
 
     exercise["type"] = type_key
     exercise["type_label"] = meta[type_key]["label"]
+
+    # 超纲词校验与替换（仅 AI 生成模式；自定义原文模式尊重"原文保留不变"）
+    exercise["vocab_adjustments"] = []
+    vocab_check = data.get("vocabCheck")
+    if vocab_check is None:
+        vocab_check = os.environ.get("CET_VOCAB_CHECK", "1") not in ("0", "false", "False", "")
+    if vocab_check and not custom_text:
+        try:
+            new_dialogue, replaced = refine_vocab(exercise, model)
+            if new_dialogue:
+                if type_key == "conversation":
+                    ok, _ = check_conversation({"dialogue": new_dialogue})
+                    if ok:
+                        exercise["dialogue"] = new_dialogue
+                else:
+                    exercise["dialogue"] = new_dialogue
+            if replaced:
+                exercise["vocab_adjustments"] = replaced
+        except ApiError:
+            raise  # 密钥/网络类错误继续上抛
+        except Exception as e:  # noqa: broad-except - 词汇修订失败不应阻断生成
+            app.logger.warning("vocab refine skipped: %s", e)
+
     # 生成后立即落盘为日志（失败不影响生成结果本身）
     saved = None
     try:

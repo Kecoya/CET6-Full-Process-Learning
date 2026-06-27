@@ -30,6 +30,13 @@
                         <option value="deepseek-v4-pro">deepseek-v4-pro（评分更细腻）</option>
                     </select>
                 </div>
+                <div class="col-fixed" style="min-width:260px">
+                    <label class="field-label">📚 词汇合规</label>
+                    <label style="font-size:13px;color:#555;display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:6px">
+                        <input type="checkbox" id="vocabChk" checked>
+                        生成后按「大纲词汇」替换超纲词
+                    </label>
+                </div>
             </div>
 
             <div style="margin-top:18px">
@@ -125,6 +132,12 @@
                 <button class="btn btn-red btn-sm" onclick="stopPlayback()">⏹️ 停止</button>
             </div>
             <div class="blind-banner">⚠️ 盲听模式：原文与背景已隐藏。请专注 listening，听完后写下你理解到的内容（中英文均可）。共两遍。</div>
+
+            <div class="blind-options-wrap">
+                <button type="button" class="btn btn-ghost btn-sm" id="blindOptionsToggle" onclick="toggleBlindOptions()">👁️ 查看选项（题干仍隐藏）</button>
+                <span class="hint" style="margin-left:10px">可选：边听边对照选项帮你抓重点；题干不显示。</span>
+                <div id="blindOptions" class="blind-options hidden"></div>
+            </div>
 
             <div class="round-block" id="round1Block">
                 <div class="round-title">① 第一遍盲听 <span id="r1Status"></span></div>
