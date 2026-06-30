@@ -16,6 +16,8 @@ from pathlib import Path
 import requests
 from flask import Flask, jsonify, render_template, request
 
+import vocab  # 四六级大纲词表加载 + 超纲词检测（本目录 vocab.py）
+
 BASE_DIR = Path(__file__).resolve().parent
 MY_DIR = BASE_DIR.parent / "my"
 ENV_FILE = BASE_DIR / ".env"
@@ -127,6 +129,77 @@ def parse_json_loose(raw):
     return json.loads(s)
 
 
+# ----------------------------------------------------------------------
+# 词汇合规：扫描超纲词并交 DeepSeek 裁定替换（克隆自听力专项训练）
+# ----------------------------------------------------------------------
+SYS_VOCAB = (
+    "你是 CET-6 英文语料的词汇合规审定员。下面给出若干段英文文本，以及一个由程序用"
+    "《四六级大纲词表》自动扫描得出的『疑似超纲词』候选列表。\n"
+    "重要：大纲词表并不完整，许多合法的六级词（如 workplace / teamwork / digitization / childhood）"
+    "未必被收录。你必须逐个判断：\n"
+    " - 若该词其实是常见或六级水平词汇（哪怕词表漏收），请保留，不要替换。\n"
+    " - 仅当某词确实生僻、超出六级范围时，才替换为意思最接近的『六级内』同义词；"
+    "若单字替换不自然则改写整句。\n"
+    "严格要求：\n"
+    " 1. 只修订『确实超纲』的词所在句，其余原句一字不改；不得增删整段、不得改变段数与顺序。\n"
+    " 2. 必须保持原文原意与全部信息点（人物/事件/数字/因果/观点/态度/术语）。\n"
+    " 3. 若文本含 __26__、__27__ 这类空格标记，必须原样保留标记与编号，不得改动。\n"
+    " 4. 修订后须自然、连贯，难度维持六级水平。\n"
+    " 5. 严格只输出一个 JSON 对象：\n"
+    ' {"blocks":["修订后的文本段1","修订后的文本段2",...](段数须与输入完全一致),'
+    '"replaced":[{"from":"原超纲词","to":"替换为的大纲词或改写说明","reason":"为何替换"}]}\n'
+    "若没有任何词需要替换，blocks 原样返回、replaced 返回空数组 []。"
+)
+
+
+def refine_blocks(blocks, model=None):
+    """blocks: list[str] 英文文本段。扫描疑似超纲词，交 DeepSeek 裁定替换。
+    返回 (new_blocks_or_None, replaced_list)。词表缺失或无候选返回 (None, [])。"""
+    vocab_set, _ = vocab.load_vocab()
+    if not vocab_set or not blocks:
+        return None, []
+    candidates = vocab.scan_out_of_scope("\n".join(blocks), vocab_set)
+    if not candidates:
+        return None, []
+    cand_str = ", ".join(sorted({c["word"] for c in candidates}))
+    user_msg = (
+        "疑似超纲词候选（小写，已去重）：%s\n\n"
+        "待审定文本段（JSON 数组，共 %d 段）：\n%s\n\n"
+        "请逐词裁定并输出修订结果（blocks 段数必须与输入一致）。"
+        % (cand_str, len(blocks), json.dumps(blocks, ensure_ascii=False))
+    )
+    try:
+        raw = call_deepseek(
+            [{"role": "system", "content": SYS_VOCAB}, {"role": "user", "content": user_msg}],
+            model,
+        )
+        data = parse_json_loose(raw)
+    except ApiError:
+        raise
+    except Exception as e:  # noqa: broad-except
+        app.logger.warning("vocab refine deepseek failed: %s", e)
+        return None, [{"from": c["word"], "to": "", "reason": "扫描到疑似超纲词，自动修订未完成"} for c in candidates]
+    if not isinstance(data, dict):
+        return None, []
+    new_blocks = data.get("blocks")
+    replaced = data.get("replaced") or []
+    if not isinstance(new_blocks, list) or len(new_blocks) != len(blocks):
+        return None, replaced
+    if not all(isinstance(b, str) and b.strip() for b in new_blocks):
+        return None, replaced
+    return new_blocks, replaced
+
+
+def refine_vocab(exercise, model=None):
+    """长篇阅读：审定各段 text；保留段落 label 与结构，不动 statements/answers。"""
+    paras = exercise.get("passage", [])
+    new_blocks, replaced = refine_blocks([p.get("text", "") for p in paras], model)
+    if new_blocks is not None:
+        for p, t in zip(paras, new_blocks):
+            p["text"] = t
+    return replaced
+
+
 def validate_exercise(d):
     errs = []
     if not isinstance(d, dict):
@@ -223,6 +296,22 @@ def api_generate():
 
     exercise["type"] = "matching"
     exercise["type_label"] = TYPE_LABEL
+
+    # 词汇合规：扫描超纲词并替换（默认开启；前端 vocabCheck 或环境变量 CET_VOCAB_CHECK=0 可关闭）
+    exercise["vocab_adjustments"] = []
+    vocab_check = data.get("vocabCheck")
+    if vocab_check is None:
+        vocab_check = os.environ.get("CET_VOCAB_CHECK", "1") not in ("0", "false", "False", "")
+    if vocab_check:
+        try:
+            replaced = refine_vocab(exercise, model)
+            if replaced:
+                exercise["vocab_adjustments"] = replaced
+        except ApiError:
+            raise
+        except Exception as e:  # noqa: broad-except
+            app.logger.warning("vocab refine skipped: %s", e)
+
     saved = None
     try:
         saved = str(write_to_my(exercise, label="长篇阅读生成", with_time=True).relative_to(BASE_DIR.parent))

@@ -72,7 +72,7 @@
         const wordTarget = parseInt(document.getElementById('wordTarget').value, 10) || 700;
         showLoading('正在生成 CET-6 精读原文（约 ' + wordTarget + ' 词，可能需 20–40 秒）…');
         try {
-            const d = await apiPost('/api/generate', { keywords, wordTarget, model: currentModel() });
+            const d = await apiPost('/api/generate', { keywords, wordTarget, model: currentModel(), vocabCheck: document.getElementById('vocabChk').checked });
             loadArticle(d.article);
             const savedName = d.saved ? d.saved.split(/[\\/]/).pop() : '';
             toast(savedName ? ('已生成并存档：my/' + savedName) : '生成完成，开始逐段翻译', 'ok');

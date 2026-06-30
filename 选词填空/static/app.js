@@ -73,7 +73,7 @@
         const topic = document.getElementById('topicInput').value;
         showLoading('正在生成 CET-6 选词填空…');
         try {
-            const d = await apiPost('/api/generate', { topic, model: currentModel() });
+            const d = await apiPost('/api/generate', { topic, model: currentModel(), vocabCheck: document.getElementById('vocabChk').checked });
             loadExercise(d.exercise);
             const savedName = d.saved ? d.saved.split(/[\\/]/).pop() : '';
             toast(savedName ? ('已生成并存档：my/' + savedName) : '生成完成，开始作答', 'ok');
