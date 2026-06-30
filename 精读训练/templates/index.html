@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 CET-6 精读训练</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔍 CET-6 精读训练</h1>
+            <div class="header-info">关键词 → AI 生成原文 → 逐段翻译 → AI 逐段纠错（指出译错处 + 原因 + 建议）</div>
+        </header>
+
+        <div class="card">
+            <h2>⚙️ 基础设置</h2>
+            <div id="statusBanner" class="status-banner">
+                <span id="statusBackend">🔌 后端：检测中…</span>
+                <span id="statusKey">🔑 DeepSeek Key：检测中…</span>
+                <span id="statusHint" class="hint" style="margin:0"></span>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <div class="col-fixed" style="min-width:240px">
+                    <label class="field-label">🧠 模型（留空则使用 .env 默认值）</label>
+                    <select id="modelSelect">
+                        <option value="" selected>使用 .env 默认</option>
+                        <option value="deepseek-v4-flash">deepseek-v4-flash（快·省）</option>
+                        <option value="deepseek-v4-pro">deepseek-v4-pro（纠错更细腻）</option>
+                    </select>
+                </div>
+                <div class="col-fixed" style="min-width:240px">
+                    <label class="field-label">📊 每日阅读量（原文字数）</label>
+                    <select id="wordTarget">
+                        <option value="500">500 词 · 轻松</option>
+                        <option value="700" selected>700 词 · 推荐（每日一次）</option>
+                        <option value="1000">1000 词 · 加强</option>
+                    </select>
+                    <div class="hint">推荐 700 词 / 6–8 段：稳步提升且不疲劳。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:16px 22px"><div class="stepper" id="stepper"></div></div>
+
+        <div class="card" id="stage-source">
+            <h2>✨ 生成今日精读</h2>
+            <label class="field-label">关键词（领域 / 方向 / 内容，留空则随机六级题材）</label>
+            <input type="text" id="keywordsInput" placeholder="例如：人工智能与就业 / 海洋塑料污染 / 远程办公的利弊" />
+            <div class="hint">AI 将按关键词生成 CET-6 难度原文（分 6–8 段），逐段翻译后由 AI 纠错。</div>
+            <div style="margin-top:16px">
+                <button class="btn btn-primary" onclick="generateArticle()">✨ 生成精读原文</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="stage-read">
+            <div class="section-head">
+                <div class="left"><h2 style="margin:0">📖 逐段翻译 · AI 纠错</h2><span class="badge" id="artBadge"></span></div>
+                <span class="badge green" id="progBadge">已评价 0 / 0 段</span>
+            </div>
+            <div id="articleMeta" class="hint" style="margin-bottom:14px"></div>
+            <div id="paragraphsBox"></div>
+            <div style="margin-top:22px;text-align:center">
+                <button class="btn btn-green" onclick="saveExercise()">💾 保存全文（原文+译文+纠错）到 my/</button>
+                <button class="btn btn-ghost" onclick="restart()">🔄 再来一篇</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="ltext" id="loadingText">AI 思考中…</div>
+    </div>
+    <script src="/static/app.js" defer></script>
+</body>
+</html>
