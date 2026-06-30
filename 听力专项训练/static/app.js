@@ -461,7 +461,7 @@
 
             const head = document.createElement('div');
             head.className = 'q-head';
-            head.innerHTML = `<span class="q-num">Q${idx}</span><span class="badge warn">题干已隐藏（精听/评分后可显示）</span><button type="button" class="icon-btn" style="margin-left:auto" title="朗读本题题干与选项" onclick="playQuestion(${i})">🔊 播放题目</button>`;
+            head.innerHTML = `<span class="q-num">Q${idx}</span><span class="badge warn">题干已隐藏（精听/评分后可显示）</span><button type="button" class="icon-btn" style="margin-left:auto" title="朗读本题题干" onclick="playQuestion(${i})">🔊 播放题目</button>`;
             block.appendChild(head);
 
             const stem = document.createElement('div');
@@ -643,7 +643,7 @@
             const yourAns = state.selections[idx];
             const ok = yourAns === q.answer;
             block.innerHTML = `
-                <div class="q-head"><span class="q-num">Q${idx}</span>${state.scored ? `<span class="badge ${ok ? '' : 'warn'}" style="${ok ? 'background:#e8f5e8;color:#2e7d32' : ''}">你的选择：${yourAns || '未选'} ${ok ? '✓' : '✗'}</span>` : ''}<button type="button" class="icon-btn" style="margin-left:auto" title="朗读题干与选项" onclick="playQuestion(${i})">🔊 读题</button></div>
+                <div class="q-head"><span class="q-num">Q${idx}</span>${state.scored ? `<span class="badge ${ok ? '' : 'warn'}" style="${ok ? 'background:#e8f5e8;color:#2e7d32' : ''}">你的选择：${yourAns || '未选'} ${ok ? '✓' : '✗'}</span>` : ''}<button type="button" class="icon-btn" style="margin-left:auto" title="朗读题干" onclick="playQuestion(${i})">🔊 读题</button></div>
                 <div class="q-stem visible">${escapeHtml(q.question)}</div>
                 ${['A','B','C','D'].map(letter => {
                     let cls = 'option-item';
@@ -669,12 +669,11 @@
         playOne(s.text, s.speaker, { onEnd: clearSentenceHighlight });
     }
     function playQuestion(i) {
-        // 朗读题干 + 四个选项（题目由旁白女声朗读，模拟真题读题）
+        // 仅朗读题干（不读选项），题目由旁白女声朗读
         const q = state.exercise && state.exercise.questions[i];
         if (!q) return;
         stopPlayback();
-        const opts = ['A', 'B', 'C', 'D'].map(L => `${L}, ${q.options[L]}.`).join(' ');
-        const text = `Question ${i + 1}. ${q.question}. ${opts}`;
+        const text = `Question ${i + 1}. ${q.question}`;
         speechSynthesis.speak(makeUtterance(text, 'N'));
     }
     function highlightSentence(i) {
